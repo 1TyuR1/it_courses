@@ -1,0 +1,77 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: sso-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: sso
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./certs/server.crt:/var/lib/postgresql/server.crt:ro
+      - ./certs/server.key:/var/lib/postgresql/server.key:ro
+      - ./certs/rootCA.crt:/var/lib/postgresql/rootCA.crt:ro
+    command:
+      - "postgres"
+      - "-c"
+      - "ssl=on"
+      - "-c"
+      - "ssl_cert_file=/var/lib/postgresql/server.crt"
+      - "-c"
+      - "ssl_key_file=/var/lib/postgresql/server.key"
+      - "-c"
+      - "ssl_ca_file=/var/lib/postgresql/rootCA.crt"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d sso"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: sso-app
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      APP_ENV: local
+      CONFIG_PATH: /app/config.yaml
+      POSTGRES_DSN: "postgresql://postgres:postgres@db:5432/sso?sslmode=verify-full&sslrootcert=/app/certs/rootCA.crt"
+      GRPC_PORT: "2441"
+      GRPC_TIMEOUT: "5s"
+      TOKEN_TTL: "1h"
+    volumes:
+      - ./config/config.yaml:/app/config.yaml:ro
+
+      - ./certs/rootCA.crt:/app/certs/rootCA.crt:ro
+    ports:
+      - "2441:2441"
+    command: ["/app/sso"]
+
+  migrator:
+    image: sso-app:latest
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      POSTGRES_DSN: "postgresql://postgres:postgres@db:5432/sso?sslmode=verify-full&sslrootcert=/app/certs/rootCA.crt"
+    volumes:
+      - ./migrations:/app/migrations:ro
+      - ./certs/rootCA.crt:/app/certs/rootCA.crt:ro
+    entrypoint: ["/app/migrator"]
+    command:
+      [
+        "-dsn",
+        "${POSTGRES_DSN}",
+        "-migrations-path",
+        "/app/migrations",
+        "-migrations-table",
+        "schema_migrations",
+      ]
+
+volumes:
+  pgdata: {}

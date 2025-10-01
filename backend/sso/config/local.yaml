@@ -1,0 +1,9 @@
+env: "local"
+
+postgres_dsn: "postgresql://postgres:postgres@localhost:5432/sso?sslmode=verify-ca&sslrootcert=./certs/rootCA.crt"
+
+token_ttl: 1h
+
+grpc:
+  port: 2441
+  timeout: 5s

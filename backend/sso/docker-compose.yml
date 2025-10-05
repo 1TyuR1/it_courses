@@ -40,7 +40,7 @@ services:
     environment:
       APP_ENV: local
       CONFIG_PATH: /app/config.yaml
-      POSTGRES_DSN: "postgresql://postgres:postgres@db:5432/sso?sslmode=verify-full&sslrootcert=/app/certs/rootCA.crt"
+      POSTGRES_DSN: "postgresql://postgres:postgres@db:5432/sso?sslmode=disable"
       GRPC_PORT: "2441"
       GRPC_TIMEOUT: "5s"
       TOKEN_TTL: "1h"
@@ -58,10 +58,11 @@ services:
       db:
         condition: service_healthy
     environment:
-      POSTGRES_DSN: "postgresql://postgres:postgres@db:5432/sso?sslmode=verify-full&sslrootcert=/app/certs/rootCA.crt"
+      CONFIG_PATH: /app/config.yaml
+      POSTGRES_DSN: "postgresql://postgres:postgres@db:5432/sso?sslmode=disable"
     volumes:
+      - ./config/local.yaml:/app/config.yaml:ro
       - ./migrations:/app/migrations:ro
-      - ./certs/rootCA.crt:/app/certs/rootCA.crt:ro
     entrypoint: ["/app/migrator"]
     command:
       [

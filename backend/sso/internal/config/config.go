@@ -74,7 +74,7 @@ func fetchConfigPath() string {
 	}
 
 	if res == "" {
-		res = "./config/config.yaml"
+		res = "./config/local.yaml"
 	}
 	return res
 }

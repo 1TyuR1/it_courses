@@ -1,0 +1,8 @@
+docker compose run --rm \
+  -v "$PWD/migrations":/app/migrations:ro \
+  -v "$PWD/certs/rootCA.crt":/app/certs/rootCA.crt:ro \
+  -e POSTGRES_DSN='postgresql://postgres:postgres@db:5432/sso?sslmode=verify-full&sslrootcert=/app/certs/rootCA.crt' \
+  app /app/migrator \
+    -dsn "$POSTGRES_DSN" \
+    -migrations-path "/app/migrations" \
+    -migrations-table "schema_migrations"

@@ -1,0 +1,44 @@
+cat > .gitignore << 'EOF'
+# Binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+bin/
+dist/
+
+# Go
+*.test
+*.out
+go.work
+vendor/
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Environment
+.env
+.env.local
+*.pem
+*.key
+
+# Logs
+*.log
+logs/
+
+# Databases
+*.db
+*.sqlite
+
+# Docker
+.docker/
+
+# OS
+.DS_Store
+Thumbs.db
+EOF
